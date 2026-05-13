@@ -1,0 +1,11 @@
+---
+title: "project"
+format: html
+editor: visual
+---
+
+James Irwin
+
+```{r}
+1 + 1
+```
