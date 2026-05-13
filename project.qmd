@@ -9,3 +9,10 @@ James Irwin
 ```{r}
 1 + 1
 ```
+
+Cole Rowland
+
+```{r}
+2*2
+```
+
