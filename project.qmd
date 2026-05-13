@@ -1,7 +1,7 @@
 ---
 title: "project"
 format: html
-editor: visual
+editor: source
 ---
 
 James Irwin
@@ -15,4 +15,3 @@ Cole Rowland
 ```{r}
 2*2
 ```
-
