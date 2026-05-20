@@ -217,11 +217,11 @@ lang <- read_delim("data/student-por.csv", delim = ';')
 ```
 
 ```{r}
-head(math)
+# head(math)
 ```
 
 ```{r}
-head(lang)
+# head(lang)
 ```
 
 ## Clean and Combine the Data
@@ -243,15 +243,44 @@ that requires it)
 
 ## Advanced Questions
 
-Write a function to ... Apply it to both of the datasets.
+```{r}
+# convert to factor for now 
+# NOTE: remove this once it is done in data cleaning
+math <- math |>
+  mutate(traveltime = as.factor(traveltime))
+```
+
+Write a function that will, given a dataframe, group by a column and the count 
+the number of each distinct value within another column. That is, the output
+should be a dataframe with three columns: the group by variable, the summarize 
+variables, and the number of distinct occurrences.
+
+This function should take in four parameters: 
+
+- dataframe
+- column to group by
+- column to summarize
+- (optionally) a name for the column with count values
 
 ```{r}
-# TODO: add label
+# Your solution here.
 ```
 
 ```{r}
 #| code-fold: true
-#| code-summary: "Click to see the solution"
+#| code-summary: "Click here to see the solution"
+huh <- function(df, group_col, summary_col, col_name = "new_col") {
+  df |>
+    count({{ group_col }}, {{ summary_col }}) |>
+    rename(count = n)
+}
+```
+
+Apply this function to the math dataset to prove that it works. Group by address
+and summarize traveltime.
+       
+```{r}
+huh(math, address, traveltime)
 ```
 
 ## Section 4: Wrap-Up
