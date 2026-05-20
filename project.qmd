@@ -15,6 +15,13 @@ execute:
   warning: false
 ---
 
+
+```{r}
+#| label: packages
+
+library(tidyverse)
+```
+
 ## Instructions
 
 The [data](https://archive.ics.uci.edu/dataset/320/student+performance) for this
@@ -203,16 +210,50 @@ each student. These features are:
 ## Access the Data
 
 ```{r}
-# load the appropriate data
+# math dataset
+math <- read_delim("data/student-mat.csv", delim = ';')
+# language dataset
+lang <- read_delim("data/student-por.csv", delim = ';')
+```
 
+```{r}
+head(math)
+```
+
+```{r}
+head(lang)
 ```
 
 ## Clean and Combine the Data
 
-## Section 1: Clean the Data
+Some ideas: 
 
-## Section 2: Basic Questions
+- covert school, sex, address, famsize, Pstatus, Medu, Fedu, Mjob, Fjob, reason,
+and guardian to factors
+- could convert anything labeled "yes"/"no" to True or False
+- eventually, drop columns that we don't need (but we wont know which ones until
+we are done writing the lab, so will have to do this after lab created)
 
-## Section 3: Advanced Questions
+Could also combine the datasets (but this could be done in a specific question
+that requires it)
+
+## Basic Questions
+
+... TODO ...
+
+## Advanced Questions
+
+Write a function to ... Apply it to both of the datasets.
+
+```{r}
+# TODO: add label
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Click to see the solution"
+```
 
 ## Section 4: Wrap-Up
+
+... TODO ...
