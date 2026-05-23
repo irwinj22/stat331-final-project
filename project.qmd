@@ -224,9 +224,9 @@ lang <- read_delim("data/student-por.csv", delim = ';')
 # head(lang)
 ```
 
-## Clean and Combine the Data
+## Basic Questions
 
-Some ideas: 
+## Clean and Combine the Data
 
 - covert school, sex, address, famsize, Pstatus, Medu, Fedu, Mjob, Fjob, reason,
 and guardian to factors
@@ -234,8 +234,22 @@ and guardian to factors
 - eventually, drop columns that we don't need (but we wont know which ones until
 we are done writing the lab, so will have to do this after lab created)
 
-Could also combine the datasets (but this could be done in a specific question
-that requires it)
+**1.** How could you write code to clean the dataset as outlined above? (drop columns not included yet as noted)
+
+```{r}
+# Your solution here.
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Click here to see the solution"
+math <- math |>
+  mutate(across(school:traveltime, as.factor)) |>
+  mutate(across(schoolsup:romantic, 
+                ~ case_when(.x == "yes" ~ TRUE, 
+                            .x == "no"  ~ FALSE, 
+                            .default    = NA)))
+```
 
 ## Join the Datasets
 
@@ -243,7 +257,7 @@ As noted in the data description, 382 students appear in both the math and
 language datasets. We can identify these students using the attributes they
 share across both datasets.
 
-**1.** Using the shared attributes listed in the data description, join the `math`
+**2.** Using the shared attributes listed in the data description, join the `math`
 and `lang` datasets so that each row represents one student enrolled in both
 courses. Assign this to a new dataset called `both_students`.**
 
@@ -251,7 +265,7 @@ courses. Assign this to a new dataset called `both_students`.**
 you keep all students, or only those who appear in both datasets?
 
 ```{r}
-# code for Q1
+# code for Q2
 ```
 
 ```{r}
@@ -266,13 +280,13 @@ both_students <- math |>
 
 **Checkpoint:** Your joined dataset should have 382 rows.
 
-**2.** Using your joined dataset, create a new variable `g3_diff` that represents
+**3.** Using your joined dataset, create a new variable `g3_diff` that represents
 the difference between a student's final math grade (`G3.x`) and their final 
 Portuguese language grade (`G3.y`). Which subject did students tend to perform 
 better in on average? Answer in one sentence below your code.**
 
 ```{r}
-# code for Q2
+# code for Q3
 ```
 
 ```{r}
@@ -285,17 +299,6 @@ both_students |>
   summarize(mean_diff = mean(g3_diff))
 ```
 
-## Basic Questions
-
-... TODO ...
-
-Clean the dataset.
-
-```{r}
-# 
-```
-
-
 ## Advanced Questions
 
 ```{r}
@@ -305,7 +308,7 @@ math <- math |>
   mutate(traveltime = as.factor(traveltime))
 ```
 
-**3.** Write a function that will, given a dataframe, group by a column and the count 
+**4.** Write a function that will, given a dataframe, group by a column and the count 
 the number of each distinct value within another column. That is, the output
 should be a dataframe with three columns: the group by variable, the summarize 
 variables, and the number of distinct occurrences.
@@ -331,7 +334,7 @@ huh <- function(df, group_col, summary_col, col_name = "new_col") {
 }
 ```
 
-**4.**Apply this function to the math dataset to prove that it works. Group by address
+**5.**Apply this function to the math dataset to prove that it works. Group by address
 and summarize traveltime.
        
 ```{r}
