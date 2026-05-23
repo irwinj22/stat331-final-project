@@ -234,16 +234,31 @@ and guardian to factors
 - eventually, drop columns that we don't need (but we wont know which ones until
 we are done writing the lab, so will have to do this after lab created)
 
-**1.** How could you write code to clean the dataset as outlined above? (drop columns not included yet as noted)
+**1.** How could you write code to clean both datasets as outlined above? (drop columns not included yet as noted)
 
 ```{r}
-# Your solution here.
+# Your solution for math here.
 ```
 
 ```{r}
 #| code-fold: true
 #| code-summary: "Click here to see the solution"
 math <- math |>
+  mutate(across(school:traveltime, as.factor)) |>
+  mutate(across(schoolsup:romantic, 
+                ~ case_when(.x == "yes" ~ TRUE, 
+                            .x == "no"  ~ FALSE, 
+                            .default    = NA)))
+```
+  
+```{r}
+# Your solution for lang here.
+```  
+
+```{r}
+#| code-fold: true
+#| code-summary: "Click here to see the solution"
+lang <- lang |>
   mutate(across(school:traveltime, as.factor)) |>
   mutate(across(schoolsup:romantic, 
                 ~ case_when(.x == "yes" ~ TRUE, 
