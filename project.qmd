@@ -323,7 +323,7 @@ math <- math |>
   mutate(traveltime = as.factor(traveltime))
 ```
 
-**4.** Write a function that will, given a dataframe, group by a column and the count 
+**4a.** Write a function that will, given a dataframe, group by a column and the count 
 the number of each distinct value within another column. That is, the output
 should be a dataframe with three columns: the group by variable, the summarize 
 variables, and the number of distinct occurrences.
@@ -349,7 +349,7 @@ huh <- function(df, group_col, summary_col, col_name = "new_col") {
 }
 ```
 
-**5.**Apply this function to the math dataset to prove that it works. Group by address
+**4b.**Apply this function to the math dataset to prove that it works. Group by address
 and summarize traveltime.
        
 ```{r}
