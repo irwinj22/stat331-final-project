@@ -402,3 +402,32 @@ plot <- addr_traveltime |>
 
 # plot
 ```
+
+
+**6.** Create a histogram displaying the distribution of the final math grades
+(`G3.x`) for students in `both_classes`. Based on the shape of the distribution,
+does the data appear to be approximately normally distributed? Ansewr in one to 
+two sentences below your code.
+
+> **Tip:** Think about appropriate bin widths, singe grades range from 0 to 20,
+> a bin width of 1 makes sense here!
+
+```{r}
+# Your solution here.
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Click here to see solution"
+both_classes |> 
+  ggplot(aes(x = G3.x)) +
+  geom_historgram(binwidth = 1,
+                  fill = "steelblue",
+                  color = "white") +
+  labs(
+    title = "Distribution of Final Math Grades",
+    x = "Final Math Grade (0-20)",
+    y = "Number of Students"
+  )
+```
+
