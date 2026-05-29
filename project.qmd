@@ -20,6 +20,7 @@ execute:
 #| label: packages
 
 library(tidyverse)
+library(knitr)
 ```
 
 ## Instructions
@@ -215,18 +216,9 @@ math <- read_delim("data/student-mat.csv", delim = ';')
 # language dataset
 lang <- read_delim("data/student-por.csv", delim = ';')
 ```
+## Data Cleaning
 
-```{r}
-# head(math)
-```
-
-```{r}
-# head(lang)
-```
-
-## Basic Questions
-
-## Clean and Combine the Data
+### Basic Cleaning
 
 - covert school, sex, address, famsize, Pstatus, Medu, Fedu, Mjob, Fjob, reason,
 and guardian to factors
@@ -266,7 +258,7 @@ lang <- lang |>
                             .default    = NA)))
 ```
 
-## Join the Datasets
+### Join the Datasets
 
 As noted in the data description, 382 students appear in both the math and
 language datasets. We can identify these students using the attributes they
@@ -274,7 +266,7 @@ share across both datasets.
 
 **2.** Using the shared attributes listed in the data description, join the `math`
 and `lang` datasets so that each row represents one student enrolled in both
-courses. Assign this to a new dataset called `both_students`.**
+courses. Assign this to a new dataset called `both_classes`.
 
 > **Tip:** Think carefully about which type of join is appropriate here - should
 you keep all students, or only those who appear in both datasets?
@@ -286,7 +278,7 @@ you keep all students, or only those who appear in both datasets?
 ```{r}
 #| code-fold: true
 #| code-summary: "Click here to see the solution"
-both_students <- math |> 
+both_classes <- math |> 
   inner_join(lang,
              by = c("school", "sex", "age", "address", "famsize", "Pstatus", 
                     "Medu", "Fedu", "Mjob", "Fjob", "reason", "nursery", 
@@ -295,7 +287,11 @@ both_students <- math |>
 
 **Checkpoint:** Your joined dataset should have 382 rows.
 
-**3.** Using your joined dataset, create a new variable `g3_diff` that represents
+```{r}
+# both_classes
+```
+
+**3.** Using `both_classes`, create a new variable `g3_diff` that represents
 the difference between a student's final math grade (`G3.x`) and their final 
 Portuguese language grade (`G3.y`). Which subject did students tend to perform 
 better in on average? Answer in one sentence below your code.**
@@ -307,33 +303,28 @@ better in on average? Answer in one sentence below your code.**
 ```{r}
 #| code-fold: true
 #| code-summary: "Click here to see the solution"
-both_students <- both_students |> 
+both_classes <- both_classes |> 
   mutate(g3_diff = G3.x - G3.y)
 
-both_students |> 
+both_classes |> 
   summarize(mean_diff = mean(g3_diff))
 ```
 
-## Advanced Questions
+## Inference or Something
 
-```{r}
-# convert to factor for now 
-# NOTE: remove this once it is done in data cleaning
-math <- math |>
-  mutate(traveltime = as.factor(traveltime))
-```
+**4a.** Write a function that will, given a dataframe, group by one column
+and count another column. That is, the output should be a dataframe with three
+columns: the group by variable, the counted variable, and the counts. Implement
+reasonable input validation. Call this function `group_and_summarize`.
 
-**4a.** Write a function that will, given a dataframe, group by a column and the count 
-the number of each distinct value within another column. That is, the output
-should be a dataframe with three columns: the group by variable, the summarize 
-variables, and the number of distinct occurrences.
 
-This function should take in four parameters: 
+`group_and_summarize` should take in four parameters: 
+
 
 - dataframe
 - column to group by
 - column to summarize
-- (optionally) a name for the column with count values
+- an *optional* name for the new column or something like that ...
 
 ```{r}
 # Your solution here.
@@ -342,20 +333,72 @@ This function should take in four parameters:
 ```{r}
 #| code-fold: true
 #| code-summary: "Click here to see the solution"
-huh <- function(df, group_col, summary_col, col_name = "new_col") {
+group_and_summarize <- function(df, group_col, summary_col, col_name = "new_col") {
+  if (!is.data.frame(df)) {
+    stop("Error: Input must be a data frame.")
+  }
+  
   df |>
     count({{ group_col }}, {{ summary_col }}) |>
     rename(count = n)
 }
 ```
 
-**4b.**Apply this function to the math dataset to prove that it works. Group by address
-and summarize traveltime.
+
+**4b.** Apply this function to `both_classes` to prove that it works. Group by
+`address`and count `traveltime`. Name your ouptut `addr_traveltime`.
+
        
 ```{r}
-huh(math, address, traveltime)
+addr_traveltime <- group_and_summarize(both_classes, address, traveltime.x)
+addr_traveltime |>
+  kable()
 ```
 
-## Section 4: Wrap-Up
+**5.** Now, create a graph with `addr_traveltime`. This graph should contain 
+side-by-side bar charts for students from "Rural" and "Urban" environments.
+Here is an image for reference: 
 
-... TODO ...
+![Reference Image](commute_barplot.png)
+
+::: callout-tip
+
+Make sure to convert the travel times from their factor/groupings/whatever to 
+the actual time in minutes. For reference:
+
+ - Level 1: Less than 15 minutes.
+ - Level 2: 15 to 30 minutes.
+ - Level 3: 30 minutes to 1 hour.
+ - Level 4: More than 1 hour.
+ 
+:::
+
+```{r}
+# Your solution here.
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Click here to see the solution"
+
+plot <- addr_traveltime |>
+  mutate(
+    address = case_when(
+      address == "R" ~ "Rural",
+      .default = "Urban"),
+    traveltime.x = case_when(
+      traveltime.x == 1 ~ "< 15",
+      traveltime.x == 2 ~ "15-30",
+      traveltime.x == 3 ~ "30-60",
+      .default = "> 60"),
+    traveltime.x = fct_relevel(traveltime.x, "< 15", "15-30", "30-60", "> 60")) |>
+  ggplot(aes(x = traveltime.x, y = count, fill = address)) + 
+  geom_col(position = "dodge") + 
+  labs(title = "School Commute Time by Student Home Address",
+       subtitle = "Number of Students",
+       x = "Travel Time (Minutes)",
+       y = NULL,
+       fill = "Student's Home Address")
+
+# plot
+```
