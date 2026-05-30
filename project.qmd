@@ -455,6 +455,8 @@ summary(math.fit)
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Click here to see solution"
 plot(G3 ~ studytime, data = math, pch = 19)
 math.fit = lm(G3 ~ studytime, data = math)
 abline(math.fit, col = 'red')
