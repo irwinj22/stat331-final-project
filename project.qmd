@@ -421,7 +421,7 @@ two sentences below your code.
 #| code-summary: "Click here to see solution"
 both_classes |> 
   ggplot(aes(x = G3.x)) +
-  geom_historgram(binwidth = 1,
+  geom_histogram(binwidth = 1,
                   fill = "steelblue",
                   color = "white") +
   labs(
@@ -430,4 +430,36 @@ both_classes |>
     y = "Number of Students"
   )
 ```
+
+**7.** Create a scatterplot regressing G3 on goout from the math dataset.
+Create another scatterplot regressing G3 on studytime from the math dataset.
+Create a summary table for both, and then explain why one model is better than
+the other model.
+
+```{r}
+#Your solution for G3 ~ goout here
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Click here to see solution"
+plot(G3 ~ goout, data = math, pch = 19)
+math.fit = lm(G3 ~ goout, data = math)
+abline(math.fit, col = 'blue')
+
+summary(math.fit)
+```
+
+```{r}
+#Your solution for G3 ~ studytime here
+```
+
+```{r}
+plot(G3 ~ studytime, data = math, pch = 19)
+math.fit = lm(G3 ~ studytime, data = math)
+abline(math.fit, col = 'red')
+
+summary(math.fit)
+```
+
 
