@@ -21,6 +21,7 @@ execute:
 
 library(tidyverse)
 library(knitr)
+library(broom)
 ```
 
 ## Instructions
@@ -212,9 +213,9 @@ each student. These features are:
 
 ```{r}
 # math dataset
-math <- read_delim("data/student-mat.csv", delim = ';')
+math <- read_delim("student-mat.csv", delim = ';')
 # language dataset
-lang <- read_delim("data/student-por.csv", delim = ';')
+lang <- read_delim("student-por.csv", delim = ';')
 ```
 ## Data Cleaning
 
@@ -264,15 +265,12 @@ As noted in the data description, 382 students appear in both the math and
 language datasets. We can identify these students using the attributes they
 share across both datasets.
 
-**2.** Using the shared attributes listed in the data description, join the 
-`math` and `lang` datasets so that each row represents one student enrolled in 
-both courses. Before joining, rename `G1`, `G2`, and `G3` in each dataset to
-`G1_math`, `G2_math`, `G3_math` and `G1_lang`, `G2_lang`, `G3_lang`, so it is 
-clear which grades belong to which subject. Assign this to a new dataset called 
-`both_classes`.
+**2.** Using the shared attributes listed in the data description, join the `math`
+and `lang` datasets so that each row represents one student enrolled in both
+courses. Assign this to a new dataset called `both_classes`.
 
-> **Tip:** Think carefully about which type of join is appropriate here. Should
-> you keep all students, or only those who appear in both datasets?
+> **Tip:** Think carefully about which type of join is appropriate here - should
+you keep all students, or only those who appear in both datasets?
 
 ```{r}
 # code for Q2
@@ -281,14 +279,11 @@ clear which grades belong to which subject. Assign this to a new dataset called
 ```{r}
 #| code-fold: true
 #| code-summary: "Click here to see the solution"
-both_classes <- math |>
-  rename(G1_math = G1, G2_math = G2, G3_math = G3) |>
-  inner_join(
-    lang |> rename(G1_lang = G1, G2_lang = G2, G3_lang = G3),
-    by = c("school", "sex", "age", "address", "famsize", "Pstatus",
-           "Medu", "Fedu", "Mjob", "Fjob", "reason", "nursery",
-           "internet"),
-    suffix = c("_math", "_lang"))
+both_classes <- math |> 
+  inner_join(lang,
+             by = c("school", "sex", "age", "address", "famsize", "Pstatus", 
+                    "Medu", "Fedu", "Mjob", "Fjob", "reason", "nursery", 
+                    "internet"))
 ```
 
 **Checkpoint:** Your joined dataset should have 382 rows.
@@ -298,9 +293,9 @@ both_classes <- math |>
 ```
 
 **3.** Using `both_classes`, create a new variable `g3_diff` that represents
-the difference between a student's final math grade (`G3_math`) and their final
-Portuguese language grade (`G3_lang`). Which subject did students tend to 
-perform better in on average? Answer in one sentence below your code.
+the difference between a student's final math grade (`G3.x`) and their final 
+Portuguese language grade (`G3.y`). Which subject did students tend to perform 
+better in on average? Answer in one sentence below your code.**
 
 ```{r}
 # code for Q3
@@ -309,10 +304,10 @@ perform better in on average? Answer in one sentence below your code.
 ```{r}
 #| code-fold: true
 #| code-summary: "Click here to see the solution"
-both_classes <- both_classes |>
-  mutate(g3_diff = G3_math - G3_lang)
+both_classes <- both_classes |> 
+  mutate(g3_diff = G3.x - G3.y)
 
-both_classes |>
+both_classes |> 
   summarize(mean_diff = mean(g3_diff))
 ```
 
@@ -356,7 +351,7 @@ group_and_summarize <- function(df, group_col, summary_col, col_name = "new_col"
 
        
 ```{r}
-addr_traveltime <- group_and_summarize(both_classes, address, traveltime_math)
+addr_traveltime <- group_and_summarize(both_classes, address, traveltime.x)
 addr_traveltime |>
   kable()
 ```
@@ -392,13 +387,13 @@ plot <- addr_traveltime |>
     address = case_when(
       address == "R" ~ "Rural",
       .default = "Urban"),
-    traveltime_math = case_when(
-      traveltime_math == 1 ~ "< 15",
-      traveltime_math == 2 ~ "15-30",
-      traveltime_math == 3 ~ "30-60",
+    traveltime.x = case_when(
+      traveltime.x == 1 ~ "< 15",
+      traveltime.x == 2 ~ "15-30",
+      traveltime.x == 3 ~ "30-60",
       .default = "> 60"),
-    traveltime_math = fct_relevel(traveltime_math, "< 15", "15-30", "30-60", "> 60")) |>
-  ggplot(aes(x = traveltime, y = count, fill = address)) + 
+    traveltime.x = fct_relevel(traveltime.x, "< 15", "15-30", "30-60", "> 60")) |>
+  ggplot(aes(x = traveltime.x, y = count, fill = address)) + 
   geom_col(position = "dodge") + 
   labs(title = "School Commute Time by Student Home Address",
        subtitle = "Number of Students",
@@ -412,7 +407,7 @@ plot <- addr_traveltime |>
 
 **6.** Create a histogram displaying the distribution of the final math grades
 (`G3.x`) for students in `both_classes`. Based on the shape of the distribution,
-does the data appear to be approximately normally distributed? Answer in one to 
+does the data appear to be approximately normally distributed? Ansewr in one to 
 two sentences below your code.
 
 > **Tip:** Think about appropriate bin widths, singe grades range from 0 to 20,
@@ -426,7 +421,7 @@ two sentences below your code.
 #| code-fold: true
 #| code-summary: "Click here to see solution"
 both_classes |> 
-  ggplot(aes(x = G3_math)) +
+  ggplot(aes(x = G3.x)) +
   geom_histogram(binwidth = 1,
                   fill = "steelblue",
                   color = "white") +
@@ -449,11 +444,17 @@ the other model.
 ```{r}
 #| code-fold: true
 #| code-summary: "Click here to see solution"
-plot(G3 ~ goout, data = math, pch = 19)
-math.fit = lm(G3 ~ goout, data = math)
-abline(math.fit, col = 'blue')
+math |>
+  ggplot(aes(x = goout, y = G3)) +
+  geom_point(alpha = .8) +
+  geom_smooth(method = "lm") +
+  xlab("Frequency of Going Out With Friends") +
+  ylab("Final Grade")
 
-summary(math.fit)
+math_lm <- lm(G3 ~ goout, 
+                 data = math)
+
+summary(math_lm)
 ```
 
 ```{r}
@@ -463,11 +464,63 @@ summary(math.fit)
 ```{r}
 #| code-fold: true
 #| code-summary: "Click here to see solution"
-plot(G3 ~ studytime, data = math, pch = 19)
-math.fit = lm(G3 ~ studytime, data = math)
-abline(math.fit, col = 'red')
+math |>
+  ggplot(aes(x = studytime, y = G3)) +
+  geom_point(alpha = .8) +
+  geom_smooth(method = "lm") +
+  xlab("Time Spent Studying") +
+  ylab("Final Grade")
 
-summary(math.fit)
+math_lm2 <- lm(G3 ~ studytime, 
+                 data = math)
+
+summary(math_lm2)
 ```
 
+**8.** Create other diagnostic outputs for both models, and use them and the scatterplots you made in Q7 to assess whether the 4 diagnostic conditions are met.
 
+```{r}
+#normality check for G3 ~ goout
+resid_sd <- sd(math_lm$residuals)
+  
+math_lm |> 
+  broom::augment() |> 
+  ggplot(aes(x = .resid)) +
+  geom_histogram(aes(y = after_stat(density)), binwidth = 1) +
+  stat_function(fun = ~ dnorm(.x, mean = 0, sd = resid_sd),
+                color = "steelblue", lwd = 1.5) +
+  xlab("Residuals") +
+  theme(aspect.ratio = 1)
+
+#normality check for G3 ~ studytime
+resid_sd <- sd(math_lm2$residuals)
+  
+math_lm2 |> 
+  broom::augment() |> 
+  ggplot(aes(x = .resid)) +
+  geom_histogram(aes(y = after_stat(density)), binwidth = 1) +
+  stat_function(fun = ~ dnorm(.x, mean = 0, sd = resid_sd),
+                color = "steelblue", lwd = 1.5) +
+  xlab("Residuals") +
+  theme(aspect.ratio = 1)
+```
+
+```{r}
+#equal variance check for G3 ~ goout
+math_lm |> 
+  augment() |> 
+  ggplot(aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", 
+             color = "red", lwd = 1.5)
+
+#equal variance check for G3 ~ studytime
+math_lm2 |> 
+  augment() |> 
+  ggplot(aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", 
+             color = "red", lwd = 1.5)
+```
+
+From the scatterplots in Q7, we observe that both models meet the linearity condition. From the normality curves, we can see that both models have issues with normality since there are extreme outliers and very choppy histograms. Both models have equal variance based on the fitted vs residuals plot as can be seen by the dashed line being on 0.
