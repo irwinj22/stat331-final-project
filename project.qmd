@@ -411,7 +411,7 @@ plot <- addr_traveltime |>
 
 **6.** Create a histogram displaying the distribution of the final math grades
 (`G3.x`) for students in `both_classes`. Based on the shape of the distribution,
-does the data appear to be approximately normally distributed? Ansewr in one to 
+does the data appear to be approximately normally distributed? Answer in one to 
 two sentences below your code.
 
 > **Tip:** Think about appropriate bin widths, singe grades range from 0 to 20,
