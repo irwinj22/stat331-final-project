@@ -265,7 +265,7 @@ language datasets. We can identify these students using the attributes they
 share across both datasets.
 
 **2.** Using the shared attributes listed in the data description, join the 
-`math and `lang` datasets so that each row represents one student enrolled in 
+`math` and `lang` datasets so that each row represents one student enrolled in 
 both courses. Before joining, rename `G1`, `G2`, and `G3` in each dataset to
 `G1_math`, `G2_math`, `G3_math` and `G1_lang`, `G2_lang`, `G3_lang`, so it is 
 clear which grades belong to which subject. Assign this to a new dataset called 
@@ -287,7 +287,8 @@ both_classes <- math |>
     lang |> rename(G1_lang = G1, G2_lang = G2, G3_lang = G3),
     by = c("school", "sex", "age", "address", "famsize", "Pstatus",
            "Medu", "Fedu", "Mjob", "Fjob", "reason", "nursery",
-           "internet"))
+           "internet"),
+    suffix = c("_math", "_lang"))
 ```
 
 **Checkpoint:** Your joined dataset should have 382 rows.
@@ -355,7 +356,7 @@ group_and_summarize <- function(df, group_col, summary_col, col_name = "new_col"
 
        
 ```{r}
-addr_traveltime <- group_and_summarize(both_classes, address, traveltime)
+addr_traveltime <- group_and_summarize(both_classes, address, traveltime_math)
 addr_traveltime |>
   kable()
 ```
@@ -391,12 +392,12 @@ plot <- addr_traveltime |>
     address = case_when(
       address == "R" ~ "Rural",
       .default = "Urban"),
-    traveltime = case_when(
-      traveltime == 1 ~ "< 15",
-      traveltime == 2 ~ "15-30",
-      traveltime == 3 ~ "30-60",
+    traveltime_math = case_when(
+      traveltime_math == 1 ~ "< 15",
+      traveltime_math == 2 ~ "15-30",
+      traveltime_math == 3 ~ "30-60",
       .default = "> 60"),
-    traveltime = fct_relevel(traveltime, "< 15", "15-30", "30-60", "> 60")) |>
+    traveltime_math = fct_relevel(traveltime_math, "< 15", "15-30", "30-60", "> 60")) |>
   ggplot(aes(x = traveltime, y = count, fill = address)) + 
   geom_col(position = "dodge") + 
   labs(title = "School Commute Time by Student Home Address",
