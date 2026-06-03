@@ -213,9 +213,9 @@ each student. These features are:
 
 ```{r}
 # math dataset
-math <- read_delim("student-mat.csv", delim = ';')
+math <- read_delim("data/student-mat.csv", delim = ';')
 # language dataset
-lang <- read_delim("student-por.csv", delim = ';')
+lang <- read_delim("data/student-por.csv", delim = ';')
 ```
 ## Data Cleaning
 
@@ -283,7 +283,8 @@ both_classes <- math |>
   inner_join(lang,
              by = c("school", "sex", "age", "address", "famsize", "Pstatus", 
                     "Medu", "Fedu", "Mjob", "Fjob", "reason", "nursery", 
-                    "internet"))
+                    "internet"),
+             suffix = c("_math", "_lang"))
 ```
 
 **Checkpoint:** Your joined dataset should have 382 rows.
@@ -293,8 +294,8 @@ both_classes <- math |>
 ```
 
 **3.** Using `both_classes`, create a new variable `g3_diff` that represents
-the difference between a student's final math grade (`G3.x`) and their final 
-Portuguese language grade (`G3.y`). Which subject did students tend to perform 
+the difference between a student's final math grade (`G3_math`) and their final 
+Portuguese language grade (`G3_lang`). Which subject did students tend to perform 
 better in on average? Answer in one sentence below your code.**
 
 ```{r}
@@ -305,7 +306,7 @@ better in on average? Answer in one sentence below your code.**
 #| code-fold: true
 #| code-summary: "Click here to see the solution"
 both_classes <- both_classes |> 
-  mutate(g3_diff = G3.x - G3.y)
+  mutate(g3_diff = G3_math - G3_lang)
 
 both_classes |> 
   summarize(mean_diff = mean(g3_diff))
@@ -351,7 +352,7 @@ group_and_summarize <- function(df, group_col, summary_col, col_name = "new_col"
 
        
 ```{r}
-addr_traveltime <- group_and_summarize(both_classes, address, traveltime.x)
+addr_traveltime <- group_and_summarize(both_classes, address, traveltime_math)
 addr_traveltime |>
   kable()
 ```
@@ -387,13 +388,13 @@ plot <- addr_traveltime |>
     address = case_when(
       address == "R" ~ "Rural",
       .default = "Urban"),
-    traveltime.x = case_when(
-      traveltime.x == 1 ~ "< 15",
-      traveltime.x == 2 ~ "15-30",
-      traveltime.x == 3 ~ "30-60",
+    traveltime_math = case_when(
+      traveltime_math == 1 ~ "< 15",
+      traveltime_math == 2 ~ "15-30",
+      traveltime_math == 3 ~ "30-60",
       .default = "> 60"),
-    traveltime.x = fct_relevel(traveltime.x, "< 15", "15-30", "30-60", "> 60")) |>
-  ggplot(aes(x = traveltime.x, y = count, fill = address)) + 
+    traveltime_math = fct_relevel(traveltime_math, "< 15", "15-30", "30-60", "> 60")) |>
+  ggplot(aes(x = traveltime, y = count, fill = address)) + 
   geom_col(position = "dodge") + 
   labs(title = "School Commute Time by Student Home Address",
        subtitle = "Number of Students",
@@ -421,7 +422,7 @@ two sentences below your code.
 #| code-fold: true
 #| code-summary: "Click here to see solution"
 both_classes |> 
-  ggplot(aes(x = G3.x)) +
+  ggplot(aes(x = G3_math)) +
   geom_histogram(binwidth = 1,
                   fill = "steelblue",
                   color = "white") +
