@@ -555,3 +555,53 @@ math_lm2 |>
 ```
 
 From the scatterplots in Q7, we observe that both models meet the linearity condition. From the normality curves, we can see that both models have issues with normality since there are extreme outliers and very choppy histograms. Both models have equal variance based on the fitted vs residuals plot as can be seen by the dashed line being on 0.
+
+**9.** In Q7, you explored how `goout` and `studytime` each individually predict
+final math grades. Now, fit a multiple regression model that predicts `G3` using
+`studytime`, `failures`, `absences`, and `Medu` from the `math` dataset. Answer
+the following questions below your code:
+   - Which predictors are statistically significant at the 0.05 level?
+   - Interpret the coefficient for `studytime` in context?
+   - Does this model explain more variance in `G3` than teh simple models from 
+   Q7? Compare the adjusted R-squared values.
+   
+```{r}
+# Your solution here
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Click here to see the solution"
+
+math_multi <- lm(G3 ~ studytime + failures + absences + Medu, data = math)
+summary(math_multi)
+
+# compare adjusted R-squared values
+glance(math_lm2) |> 
+  select(adj.r.squared)
+glance(math_multi) |> 
+  select(adj.r.squared)
+```
+
+
+
+**10.** In Q3, you found that students tended to perform better in Portuguese
+than in math on average. But is this difference statistically significant?
+Conduct a paried t-test on `G3_math` and `G3_lang` from `both_classes` to
+formally test this. Answer the following below your code:
+   - State your null and alternative hypotheses before running the test.
+   - What is the p-value, and what does it tell you?
+   
+```{r}
+# Your solution here
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Click here to see the solution"
+
+t.test(both_classes$G3_math,
+       both_classes$G3_lang,
+       paired = TRUE)
+```
+
