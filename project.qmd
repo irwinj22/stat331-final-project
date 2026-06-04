@@ -261,13 +261,13 @@ As noted in the data description, 382 students appear in both the math and
 language datasets. We can combine math and language performance based
 on unique student attributes.
 
-**2.** Using the shared attributes listed in the data description, join the `math`
+**2a.** Using the shared attributes listed in the data description, join the `math`
 and `lang` datasets so that each row represents one student enrolled in both
 courses. Assign this to a new dataset called `both_classes`.
 
 ::: callout-tip
 
-Think carefully about which type of join is appropriate here - should
+Think carefully about which type of join is appropriate here. Should
 you keep all students, or only those who appear in both datasets?
 
 There are going to be repeated columns across the two datasets. How can you
@@ -277,7 +277,7 @@ handle these? We recommend naming the columns for math and language performance
 :::
 
 ```{r}
-# code for Q2
+# code for Q2a
 ```
 
 ```{r}
@@ -297,11 +297,32 @@ Your joined dataset should have 382 rows.
 
 :::
 
+**2b.** Take a look at your joined dataset. You may notice that soem students
+have a final grade (`G3_math` or `G3_lang`) of 0. These students did not 
+actually score a zero, they withdrew from the course before the final exam.
+Filter these students out of `both_classes` so they do not skew your analysis.
+How many students remain after filtering?
+
+```{r}
+# code for Q2b
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Click here to see the solution"
+
+both_classes <- both_classes |> 
+  filter(G3_math != 0, G3_lang != 0)
+
+nrow(both_classes)
+```
+
+There are 340 students remaining after filtering.
 
 **3.** Using `both_classes`, create a new variable `g3_diff` that represents
 the difference between a student's final math grade (`G3_math`) and their final 
-Portuguese language grade (`G3_lang`). Which subject did students tend to perform 
-better in on average? Answer in one sentence below your code.
+Portuguese language grade (`G3_lang`). Which subject did students tend to 
+perform better in on average? Answer in one sentence below your code.
 
 ```{r}
 # code for Q3
@@ -310,12 +331,18 @@ better in on average? Answer in one sentence below your code.
 ```{r}
 #| code-fold: true
 #| code-summary: "Click here to see the solution"
+
 both_classes <- both_classes |> 
   mutate(g3_diff = G3_math - G3_lang)
 
 both_classes |> 
-  summarize(mean_diff = mean(g3_diff))
+  summarize(mean_math = mean(G3_math),
+            mean_lang = mean(G3_lang),
+            mean_diff = mean(g3_diff))
 ```
+
+Students tend to perform better in language than in math class, given that the 
+mean scoring for language is 12.81 and the mean scoring for math is 11.6.
 
 ## The Effect of Region on Performance
 
