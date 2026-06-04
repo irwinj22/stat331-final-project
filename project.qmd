@@ -24,7 +24,7 @@ library(knitr)
 library(broom)
 ```
 
-## Instructions
+## Data Overview
 
 The [data](https://archive.ics.uci.edu/dataset/320/student+performance) for this
 lab is provided by UC Irvine's Machine Learning Repository. This data involves
@@ -209,25 +209,21 @@ each student. These features are:
 - internet
 :::
 
-## Access the Data
-
 ```{r}
 # math dataset
 math <- read_delim("data/student-mat.csv", delim = ';')
 # language dataset
 lang <- read_delim("data/student-por.csv", delim = ';')
 ```
+
 ## Data Cleaning
 
-### Basic Cleaning
+**1.** Clean the datasets as follows: 
 
-- covert school, sex, address, famsize, Pstatus, Medu, Fedu, Mjob, Fjob, reason,
-and guardian to factors
-- could convert anything labeled "yes"/"no" to True or False
-- eventually, drop columns that we don't need (but we wont know which ones until
-we are done writing the lab, so will have to do this after lab created)
-
-**1.** How could you write code to clean both datasets as outlined above? (drop columns not included yet as noted)
+- covert `school`, `sex`, `address`, `famsize`, `Pstatus`, `Medu`, `Fedu`, 
+`Mjob`, `Fjob`, `reason`, and `guardian` to factors
+- could convert anything labeled `yes` to `True` and `no` to `False`
+- **TODO: clean this up:** eventually, drop columns that we don't need 
 
 ```{r}
 # Your solution for math here.
@@ -259,18 +255,26 @@ lang <- lang |>
                             .default    = NA)))
 ```
 
-### Join the Datasets
+## Combine Datasets
 
 As noted in the data description, 382 students appear in both the math and
-language datasets. We can identify these students using the attributes they
-share across both datasets.
+language datasets. We can combine math and language performance based
+on unique student attributes.
 
 **2.** Using the shared attributes listed in the data description, join the `math`
 and `lang` datasets so that each row represents one student enrolled in both
 courses. Assign this to a new dataset called `both_classes`.
 
-> **Tip:** Think carefully about which type of join is appropriate here - should
+::: callout-tip
+
+Think carefully about which type of join is appropriate here - should
 you keep all students, or only those who appear in both datasets?
+
+There are going to be repeated columns across the two datasets. How can you
+handle these? We recommend naming the columns for math and language performance
+`G3_math` and `G3_lang`, respectively.
+
+:::
 
 ```{r}
 # code for Q2
@@ -286,17 +290,18 @@ both_classes <- math |>
                     "internet"),
              suffix = c("_math", "_lang"))
 ```
+:::{.callout-tip}
 
-**Checkpoint:** Your joined dataset should have 382 rows.
+## Checkpoint
+Your joined dataset should have 382 rows.
 
-```{r}
-# both_classes
-```
+:::
+
 
 **3.** Using `both_classes`, create a new variable `g3_diff` that represents
 the difference between a student's final math grade (`G3_math`) and their final 
 Portuguese language grade (`G3_lang`). Which subject did students tend to perform 
-better in on average? Answer in one sentence below your code.**
+better in on average? Answer in one sentence below your code.
 
 ```{r}
 # code for Q3
@@ -312,21 +317,12 @@ both_classes |>
   summarize(mean_diff = mean(g3_diff))
 ```
 
-## Inference or Something
+## The Effect of Region on Performance
 
-**4a.** Write a function that will, given a dataframe, group by one column
-and count another column. That is, the output should be a dataframe with three
-columns: the group by variable, the counted variable, and the counts. Implement
-reasonable input validation. Call this function `group_and_summarize`.
-
-
-`group_and_summarize` should take in four parameters: 
-
-
-- dataframe
-- column to group by
-- column to summarize
-- an *optional* name for the new column or something like that ...
+**4.** Write a function called `compare_subjects` that takes a dataframe, a 
+demographic variable, and a list of performance variables. The function should
+return a table that shows the mean of each performance variable, grouped
+by the demographic variable.
 
 ```{r}
 # Your solution here.
@@ -335,44 +331,37 @@ reasonable input validation. Call this function `group_and_summarize`.
 ```{r}
 #| code-fold: true
 #| code-summary: "Click here to see the solution"
-group_and_summarize <- function(df, group_col, summary_col, col_name = "new_col") {
-  if (!is.data.frame(df)) {
-    stop("Error: Input must be a data frame.")
-  }
-  
+
+
+compare_subjects <- function(df, demographic, cols) {
   df |>
-    count({{ group_col }}, {{ summary_col }}) |>
-    rename(count = n)
+    group_by({{ demographic }}) |>
+    summarize(across({{ cols }}, mean, .names = "mean_{.col}"))
 }
+
 ```
 
+Make sure the function works by running the following code: 
 
-**4b.** Apply this function to `both_classes` to prove that it works. Group by
-`address`and count `traveltime`. Name your ouptut `addr_traveltime`.
-
-       
 ```{r}
-addr_traveltime <- group_and_summarize(both_classes, address, traveltime_math)
-addr_traveltime |>
-  kable()
+address_performance <- compare_subjects(both_classes,
+                                        address, 
+                                        c(G1_math, G1_lang, G2_math,
+                                          G2_lang, G3_math, G3_lang))
 ```
 
-**5.** Now, create a graph with `addr_traveltime`. This graph should contain 
-side-by-side bar charts for students from "Rural" and "Urban" environments.
-Here is an image for reference: 
+**5.**
+Now, use `address_performance` to create a graph that shows the difference in
+performance between Rural and Urban students. This graph should show how both
+math and language performance changed throughout the year. Here is an image of
+what the graph should look like: 
 
-![Reference Image](commute_barplot.png)
+![Reference Image](performance.png)
 
 ::: callout-tip
 
-Make sure to convert the travel times from their factor/groupings/whatever to 
-the actual time in minutes. For reference:
+Think about pivoting the data. 
 
- - Level 1: Less than 15 minutes.
- - Level 2: 15 to 30 minutes.
- - Level 3: 30 minutes to 1 hour.
- - Level 4: More than 1 hour.
- 
 :::
 
 ```{r}
@@ -383,36 +372,50 @@ the actual time in minutes. For reference:
 #| code-fold: true
 #| code-summary: "Click here to see the solution"
 
-plot <- addr_traveltime |>
-  mutate(
-    address = case_when(
-      address == "R" ~ "Rural",
-      .default = "Urban"),
-    traveltime_math = case_when(
-      traveltime_math == 1 ~ "< 15",
-      traveltime_math == 2 ~ "15-30",
-      traveltime_math == 3 ~ "30-60",
-      .default = "> 60"),
-    traveltime_math = fct_relevel(traveltime_math, "< 15", "15-30", "30-60", "> 60")) |>
-  ggplot(aes(x = traveltime, y = count, fill = address)) + 
-  geom_col(position = "dodge") + 
-  labs(title = "School Commute Time by Student Home Address",
-       subtitle = "Number of Students",
-       x = "Travel Time (Minutes)",
-       y = NULL,
-       fill = "Student's Home Address")
+# reference for interaction:
+# google search: "ggplot create lines based on two variables grouped together"
+# website with example: https://physiology.med.cornell.edu/people/banfelder/qbio/lecture_notes/intro2ggplot.html
 
-# plot
+graph <- address_performance |>
+  pivot_longer(
+    cols = -address,
+    names_to = c("grade", "subject"),
+    names_pattern = "mean_(G\\d)_(math|lang)"
+  ) |>
+  mutate(address = if_else(address == "R",
+                           "Rural",
+                           "Urban"),
+        subject = if_else(subject == "math",
+                           "Math",
+                           "Language")) |>
+  ggplot(aes(x = grade,
+             y = value,
+             color = address,
+             shape = subject,
+             group = interaction(address, subject))) +
+  geom_line() +
+  geom_point(size = 3) + 
+  labs(title = "Student Performance based on Home Address",
+       subtitle = "Grade",
+       x = "Period", 
+       y = NULL, 
+       color = "Address",
+       shape = "Subject")
 ```
 
+## What Affects Math Performance?
 
 **6.** Create a histogram displaying the distribution of the final math grades
 (`G3.x`) for students in `both_classes`. Based on the shape of the distribution,
 does the data appear to be approximately normally distributed? Ansewr in one to 
 two sentences below your code.
 
-> **Tip:** Think about appropriate bin widths, singe grades range from 0 to 20,
-> a bin width of 1 makes sense here!
+::: callout-tip
+
+Think about appropriate bin widths, singe grades range from 0 to 20,
+a bin width of 1 makes sense here!
+
+:::
 
 ```{r}
 # Your solution here.
