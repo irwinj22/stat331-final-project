@@ -562,7 +562,7 @@ final math grades. Now, fit a multiple regression model that predicts `G3` using
 the following questions below your code:
    - Which predictors are statistically significant at the 0.05 level?
    - Interpret the coefficient for `studytime` in context?
-   - Does this model explain more variance in `G3` than teh simple models from 
+   - Does this model explain more variance in `G3` than the simple models from 
    Q7? Compare the adjusted R-squared values.
    
 ```{r}
@@ -583,7 +583,15 @@ glance(math_multi) |>
   select(adj.r.squared)
 ```
 
+   - Which predictors are statistically significant at the 0.05 level?
+`failures` is the only predictor that is statistically significant at the 0.05 level (p < 0.001). `studytime` and `absences` are not significant, and `Medu` is only slightly significant at the 0.1 level.
+   
+   - Interpret the coefficient for `studytime` in context?
+The coefficient for `studytime` is 0.201, meaning that for each one-unit increase in study time category, a student's final math grade is predicted to increase by about 0.2 points, holding all other variables constant. However, this effect is not statistically significant. 
 
+   - Does this model explain more variance in `G3` than the simple models from 
+   Q7? Compare the adjusted R-squared values.
+Yes, the multiple regression model explains more variance as its adjusted R-squared is 0.149 compared to the 0.007 for the simple `G3 ~ studytime` model. This means that adding `failures`, `absences`, and `Medu` significantly improves the model's explanatory power.
 
 **10.** In Q3, you found that students tended to perform better in Portuguese
 than in math on average. But is this difference statistically significant?
