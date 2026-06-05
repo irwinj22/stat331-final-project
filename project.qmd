@@ -576,11 +576,13 @@ the following questions below your code:
 math_multi <- lm(G3 ~ studytime + failures + absences + Medu, data = math)
 summary(math_multi)
 
-# compare adjusted R-squared values
-glance(math_lm2) |> 
-  select(adj.r.squared)
-glance(math_multi) |> 
-  select(adj.r.squared)
+tibble(
+  model     = c("Simple (studytime only)", "Multiple Regression"),
+  adj_r_squared = c(glance(math_lm2)$adj.r.squared, 
+                    glance(math_multi)$adj.r.squared)
+) |>
+  kable(col.names = c("Model", "Adjusted R-Squared"),
+        digits = 4)
 ```
 
    - Which predictors are statistically significant at the 0.05 level?
@@ -593,12 +595,23 @@ The coefficient for `studytime` is 0.201, meaning that for each one-unit increas
    Q7? Compare the adjusted R-squared values.
 Yes, the multiple regression model explains more variance as its adjusted R-squared is 0.149 compared to the 0.007 for the simple `G3 ~ studytime` model. This means that adding `failures`, `absences`, and `Medu` significantly improves the model's explanatory power.
 
-**10.** In Q3, you found that students tended to perform better in Portuguese
-than in math on average. But is this difference statistically significant?
-Conduct a paried t-test on `G3_math` and `G3_lang` from `both_classes` to
-formally test this. Answer the following below your code:
-   - State your null and alternative hypotheses before running the test.
-   - What is the p-value, and what does it tell you?
+**10.** Before we can evaluate how well our model generalizes, we need to
+understand the ideaof a train/test split. Using the `math` dataset, perform the 
+following steps:
+   - Randomly split the data into a training set (80%) and a testing set (20%).
+     Use `set.seed(331)` so your results are reproducible.
+   - Fit the same multiple regression model from Q9 (`G3 ~ studytime + failures
+     + absences + Medu`) on the TRAINING data only.
+   - Generate predictions for the TESTING data and calculate the R-squared on
+     both training and testing sets.
+     
+Based on your results, does the model appear to be overfitting, underfitting,
+or neither?
+
+::: callout-tip
+**Hint:** You will need a helper function to calculate R-squared. Recall that
+R-squared = 1 - SSE/SST.
+:::
    
 ```{r}
 # Your solution here
@@ -608,8 +621,98 @@ formally test this. Answer the following below your code:
 #| code-fold: true
 #| code-summary: "Click here to see the solution"
 
-t.test(both_classes$G3_math,
-       both_classes$G3_lang,
-       paired = TRUE)
+r2_calc <- function(obs, pred) {
+  sse <- sum((obs - pred)^2, na.rm = TRUE)
+  sst <- sum((obs - mean(obs, na.rm = TRUE))^2, na.rm = TRUE)
+  1 - sse/sst
+}
+
+set.seed(331)
+n <- nrow(math)
+train_idx <- sample(1:n, size = floor(0.8 * n))
+
+train <- math[train_idx, ]
+test  <- math[-train_idx, ]
+
+fit <- lm(G3 ~ studytime + failures + absences + Medu, data = train)
+
+tibble(
+  split    = c("Training", "Testing"),
+  r_squared = c(r2_calc(obs = train$G3, pred = predict(fit, newdata = train)),
+                r2_calc(obs = test$G3,  pred = predict(fit, newdata = test)))
+) |>
+  kable()
 ```
 
+The training R-squared is approximately 0.163 and the testing R-squared is 
+approximately 0.149. Since the testing R-squared is slightly lower than the 
+training R-squared, the model appears to be very slightly overfitting. 
+However, the difference is small enough that the model is essentially neither
+overfitting nor underfitting in any meaningful way.
+
+**11.** The problem with a single train/test split is that the result depends 
+heavily on which observations happened to end up in each set. K-fold cross 
+validation solves this by iterating over multiple splits and averaging the 
+results. Write a function called `cv_r2` that takes a dataframe, a model
+formula, and a number of folds `k`, and returns a vector of R-squared values 
+(one per fold). Then call your function on the `math` dataset using the same 
+model from Q9 and compare the mean cross-validated R-squared to your training 
+and testing R-squared from Q10. What does this tell you about the stability of 
+the model?
+
+::: callout-tip
+**Hint:** You already wrote `r2_calc` in Q10, you can reuse it here!
+:::
+
+```{r}
+# Your solution here
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Click here to see the solution"
+
+cv_r2 <- function(df, formula, k = 5) {
+  if (!is.data.frame(df)) stop("Input must be a data frame.")
+  
+  set.seed(331)
+  n <- nrow(df)
+  df <- df |>
+    mutate(fold = sample(rep_len(1:k, length.out = n), size = n))
+  
+  results <- rep(NA, k)
+  
+  for (i in 1:k) {
+    train <- df |> filter(fold != i)
+    test  <- df |> filter(fold == i)
+    
+    fit   <- lm(formula, data = train)
+    preds <- predict(fit, newdata = test)
+    
+    results[i] <- r2_calc(obs = test[[as.character(formula[[2]])]],
+                           pred = preds)
+  }
+  
+  results
+}
+
+fold_r2 <- cv_r2(math, G3 ~ studytime + failures + absences + Medu)
+
+tibble(
+  fold      = 1:5,
+  r_squared = fold_r2
+) |>
+  bind_rows(tibble(fold = NA, r_squared = mean(fold_r2))) |>
+  mutate(fold = as.character(fold),
+         fold = if_else(is.na(fold), "Mean", fold)) |>
+  kable(col.names = c("Fold", "R-Squared"))
+```
+
+The mean cross-validated R-squared is approximately 0.135, which is very close to
+both the training and testing R-squared values from Q10. This consistency across
+all 5 folds suggests that the model is stable and generalizes reasonably well
+to new data. The fact that the CV R-squared values vary somewhat across folds
+(some higher, some lower) illustrates exactly why a single train/test split
+can be misleading. This is because the result depends heavily on which 
+observations end up in which set. The k-fold approach gives a more reliable
+estimate of true model performance.
