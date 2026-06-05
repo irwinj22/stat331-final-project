@@ -24,6 +24,12 @@ library(knitr)
 library(broom)
 ```
 
+[Download .qmd starter file](project.qmd)
+
+[Download student-por.csv](data/student-por.csv)
+
+[Download student-mat.csv](data/student-mat.csv)
+
 ## Data Overview
 
 The [data](https://archive.ics.uci.edu/dataset/320/student+performance) for this
