@@ -273,7 +273,7 @@ courses. Assign this to a new dataset called `both_classes`.
 
 ::: callout-tip
 
-Think carefully about which type of join is appropriate here. Should
+**Hint:** Think carefully about which type of join is appropriate here. Should
 you keep all students, or only those who appear in both datasets?
 
 There are going to be repeated columns across the two datasets. How can you
@@ -303,7 +303,7 @@ Your joined dataset should have 382 rows.
 
 :::
 
-**2b.** Take a look at your joined dataset. You may notice that soem students
+**2b.** Take a look at your joined dataset. You may notice that some students
 have a final grade (`G3_math` or `G3_lang`) of 0. These students did not 
 actually score a zero, they withdrew from the course before the final exam.
 Filter these students out of `both_classes` so they do not skew your analysis.
@@ -358,7 +358,7 @@ return a table that shows the mean of each performance variable, grouped
 by the demographic variable.
 
 ```{r}
-# Your solution here.
+# code for Q4
 ```
 
 ```{r}
@@ -383,9 +383,8 @@ address_performance <- compare_subjects(both_classes,
                                           G2_lang, G3_math, G3_lang))
 ```
 
-**5.**
-Now, use `address_performance` to create a graph that shows the difference in
-performance between Rural and Urban students. This graph should show how both
+**5.** Now, use `address_performance` to create a graph that shows the difference 
+in performance between Rural and Urban students. This graph should show how both
 math and language performance changed throughout the year. Here is an image of
 what the graph should look like: 
 
@@ -393,12 +392,12 @@ what the graph should look like:
 
 ::: callout-tip
 
-Think about pivoting the data. 
+**Hint:** Think about pivoting the data. 
 
 :::
 
 ```{r}
-# Your solution here.
+# code for Q5
 ```
 
 ```{r}
@@ -445,13 +444,13 @@ two sentences below your code.
 
 ::: callout-tip
 
-Think about appropriate bin widths, singe grades range from 0 to 20,
+**Hint:** Think about appropriate bin widths, singe grades range from 0 to 20,
 a bin width of 1 makes sense here!
 
 :::
 
 ```{r}
-# Your solution here.
+# code for Q6
 ```
 
 ```{r}
@@ -517,6 +516,11 @@ summary(math_lm2)
 **8.** Create other diagnostic outputs for both models, and use them and the scatterplots you made in Q7 to assess whether the 4 diagnostic conditions are met.
 
 ```{r}
+# code for Q8
+```
+
+
+```{r}
 #normality check for G3 ~ goout
 resid_sd <- sd(math_lm$residuals)
   
@@ -562,17 +566,22 @@ math_lm2 |>
 
 From the scatterplots in Q7, we observe that both models meet the linearity condition. From the normality curves, we can see that both models have issues with normality since there are extreme outliers and very choppy histograms. Both models have equal variance based on the fitted vs residuals plot as can be seen by the dashed line being on 0.
 
+## Model Validation
+
 **9.** In Q7, you explored how `goout` and `studytime` each individually predict
 final math grades. Now, fit a multiple regression model that predicts `G3` using
 `studytime`, `failures`, `absences`, and `Medu` from the `math` dataset. Answer
 the following questions below your code:
+
    - Which predictors are statistically significant at the 0.05 level?
+   
    - Interpret the coefficient for `studytime` in context?
+   
    - Does this model explain more variance in `G3` than the simple models from 
    Q7? Compare the adjusted R-squared values.
    
 ```{r}
-# Your solution here
+# code for Q9
 ```
 
 ```{r}
@@ -604,10 +613,13 @@ Yes, the multiple regression model explains more variance as its adjusted R-squa
 **10.** Before we can evaluate how well our model generalizes, we need to
 understand the ideaof a train/test split. Using the `math` dataset, perform the 
 following steps:
+
    - Randomly split the data into a training set (80%) and a testing set (20%).
      Use `set.seed(331)` so your results are reproducible.
+     
    - Fit the same multiple regression model from Q9 (`G3 ~ studytime + failures
      + absences + Medu`) on the TRAINING data only.
+     
    - Generate predictions for the TESTING data and calculate the R-squared on
      both training and testing sets.
      
@@ -615,12 +627,14 @@ Based on your results, does the model appear to be overfitting, underfitting,
 or neither?
 
 ::: callout-tip
+
 **Hint:** You will need a helper function to calculate R-squared. Recall that
 R-squared = 1 - SSE/SST.
+
 :::
    
 ```{r}
-# Your solution here
+# code for Q10
 ```
 
 ```{r}
@@ -667,11 +681,13 @@ and testing R-squared from Q10. What does this tell you about the stability of
 the model?
 
 ::: callout-tip
+
 **Hint:** You already wrote `r2_calc` in Q10, you can reuse it here!
+
 :::
 
 ```{r}
-# Your solution here
+# code for Q11
 ```
 
 ```{r}
