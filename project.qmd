@@ -597,7 +597,9 @@ tibble(
                     glance(math_multi)$adj.r.squared)
 ) |>
   kable(col.names = c("Model", "Adjusted R-Squared"),
-        digits = 4)
+        digits = 4) |> 
+  kableExtra::kable_styling(full_width = FALSE,
+                            bootstrap_options = "condensed")
 ```
 
    - Which predictors are statistically significant at the 0.05 level?
@@ -617,10 +619,9 @@ following steps:
    - Randomly split the data into a training set (80%) and a testing set (20%).
      Use `set.seed(331)` so your results are reproducible.
      
-   - Fit the same multiple regression model from Q9 (`G3 ~ studytime + failures
-     + absences + Medu`) on the TRAINING data only.
+   - Fit the same multiple regression model from Q9 (`G3` ~ `studytime` + `failures` + `absences` + `Medu`) on the **training** data only.
      
-   - Generate predictions for the TESTING data and calculate the R-squared on
+   - Generate predictions for the **testing** data and calculate the R-squared on
      both training and testing sets.
      
 Based on your results, does the model appear to be overfitting, underfitting,
@@ -661,7 +662,10 @@ tibble(
   r_squared = c(r2_calc(obs = train$G3, pred = predict(fit, newdata = train)),
                 r2_calc(obs = test$G3,  pred = predict(fit, newdata = test)))
 ) |>
-  kable()
+  kable(col.names = c("Split", "R-squared"),
+        digits = 4) |> 
+  kableExtra::kable_styling(full_width = FALSE,
+                            bootstrap_options = "condensed")
 ```
 
 The training R-squared is approximately 0.163 and the testing R-squared is 
@@ -727,7 +731,10 @@ tibble(
   bind_rows(tibble(fold = NA, r_squared = mean(fold_r2))) |>
   mutate(fold = as.character(fold),
          fold = if_else(is.na(fold), "Mean", fold)) |>
-  kable(col.names = c("Fold", "R-Squared"))
+  kable(col.names = c("Fold", "R-Squared"),
+        digits = 4) |> 
+  kableExtra::kable_styling(full_width = FALSE,
+                            bootstrap_options = "condensed")
 ```
 
 The mean cross-validated R-squared is approximately 0.135, which is very close to
