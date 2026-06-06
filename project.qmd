@@ -331,7 +331,7 @@ in performance? Write a sentence or two.
 ## What Affects Math Performance?
 
 **6.** Create a histogram displaying the distribution of the final math grades
-(`G3.x`) for students in `both_classes`. Based on the shape of the distribution,
+(`G3_math`) for students in `both_classes`. Based on the shape of the distribution,
 does the data appear to be approximately normally distributed? Answer in one to 
 two sentences below your code.
 
@@ -396,7 +396,7 @@ the following questions below your code:
 ```
 
 **10.** Before we can evaluate how well our model generalizes, we need to
-understand the ideaof a train/test split. Using the `math` dataset, perform the 
+understand the idea of a train/test split. Using the `math` dataset, perform the 
 following steps:
 
    - Randomly split the data into a training set (80%) and a testing set (20%).
