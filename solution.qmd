@@ -1,5 +1,5 @@
 ---
-title: "Student Performance in Portugal"
+title: "Solutions: Performance in Portugal"
 author: "James Irwin, Cole Rowland, and Ryan Simonds"
 format: 
   html:
@@ -231,12 +231,22 @@ lang <- read_delim("data/student-por.csv", delim = ';')
 - could convert anything labeled `yes` to `True` and `no` to `False`
 
 ```{r}
-# Your solution for math here.
+math <- math |>
+  mutate(across(school:traveltime, as.factor)) |>
+  mutate(across(schoolsup:romantic, 
+                ~ case_when(.x == "yes" ~ TRUE, 
+                            .x == "no"  ~ FALSE, 
+                            .default    = NA)))
 ```
 
 ```{r}
-# Your solution for lang here.
-```  
+lang <- lang |>
+  mutate(across(school:traveltime, as.factor)) |>
+  mutate(across(schoolsup:romantic, 
+                ~ case_when(.x == "yes" ~ TRUE, 
+                            .x == "no"  ~ FALSE, 
+                            .default    = NA)))
+```
 
 ## Combine Datasets
 
@@ -260,9 +270,13 @@ handle these? We recommend naming the columns for math and language performance
 :::
 
 ```{r}
-# Your solution for Q2a
+both_classes <- math |> 
+  inner_join(lang,
+             by = c("school", "sex", "age", "address", "famsize", "Pstatus", 
+                    "Medu", "Fedu", "Mjob", "Fjob", "reason", "nursery", 
+                    "internet"),
+             suffix = c("_math", "_lang"))
 ```
-
 :::{.callout-tip}
 
 ## Checkpoint
@@ -277,8 +291,13 @@ Filter these students out of `both_classes` so they do not skew your analysis.
 How many students remain after filtering?
 
 ```{r}
-# Your solution for Q2b
+both_classes <- both_classes |> 
+  filter(G3_math != 0, G3_lang != 0)
+
+nrow(both_classes)
 ```
+
+There are 340 students remaining after filtering.
 
 **3.** Using `both_classes`, create a new variable `g3_diff` that represents
 the difference between a student's final math grade (`G3_math`) and their final 
@@ -286,8 +305,17 @@ Portuguese language grade (`G3_lang`). Which subject did students tend to
 perform better in on average? Answer in one sentence below your code.
 
 ```{r}
-# Your solution for Q3
+both_classes <- both_classes |> 
+  mutate(g3_diff = G3_math - G3_lang)
+
+both_classes |> 
+  summarize(mean_math = mean(G3_math),
+            mean_lang = mean(G3_lang),
+            mean_diff = mean(g3_diff))
 ```
+
+Students tend to perform better in language than in math class, given that the 
+mean scoring for language is 12.81 and the mean scoring for math is 11.6.
 
 ## The Effect of Region on Performance
 
@@ -297,7 +325,12 @@ return a table that shows the mean of each performance variable, grouped
 by the demographic variable.
 
 ```{r}
-# Your solution for Q4
+compare_subjects <- function(df, demographic, cols) {
+  df |>
+    group_by({{ demographic }}) |>
+    summarize(across({{ cols }}, mean, .names = "mean_{.col}"))
+}
+
 ```
 
 Make sure the function works by running the following code: 
@@ -311,7 +344,8 @@ address_performance <- compare_subjects(both_classes,
 
 **5.** Now, use `address_performance` to create a graph that shows the difference 
 in performance between Rural and Urban students. This graph should show how both
-math and language performance changed throughout the year. Here is an image of what the graph should look like: 
+math and language performance changed throughout the year.Here is an image of
+what the graph should look like: 
 
 ![Reference Image](performance.png)
 
@@ -322,16 +356,47 @@ math and language performance changed throughout the year. Here is an image of w
 :::
 
 ```{r}
-# Your solution for Q5
+# reference for interaction:
+# google search: "ggplot create lines based on two variables grouped together"
+# website with example: https://physiology.med.cornell.edu/people/banfelder/qbio/lecture_notes/intro2ggplot.html
+
+address_performance |>
+  pivot_longer(
+    cols = -address,
+    names_to = c("grade", "subject"),
+    names_pattern = "mean_(G\\d)_(math|lang)"
+  ) |>
+  mutate(address = if_else(address == "R",
+                           "Rural",
+                           "Urban"),
+        subject = if_else(subject == "math",
+                           "Math",
+                           "Language")) |>
+  ggplot(aes(x = grade,
+             y = value,
+             color = address,
+             shape = subject,
+             group = interaction(address, subject))) +
+  geom_line() +
+  geom_point(size = 3) + 
+  labs(title = "Student Performance based on Home Address",
+       subtitle = "Grade",
+       x = "Period", 
+       y = NULL, 
+       color = "Address",
+       shape = "Subject")
 ```
 
 **5b.** Does it seem that location (i.e. Rural vs. Urban) makes a difference
 in performance? Write a sentence or two.
 
+Yes, it does appear that there is a difference between Rural and Urban student
+performance since Urban students outperform Rural students across both subjects.
+
 ## What Affects Math Performance?
 
 **6.** Create a histogram displaying the distribution of the final math grades
-(`G3.x`) for students in `both_classes`. Based on the shape of the distribution,
+(`G3_math`) for students in `both_classes`. Based on the shape of the distribution,
 does the data appear to be approximately normally distributed? Answer in one to 
 two sentences below your code.
 
@@ -343,39 +408,106 @@ a bin width of 1 makes sense here!
 :::
 
 ```{r}
-# Your solution for Q6
+both_classes |> 
+  ggplot(aes(x = G3_math)) +
+  geom_histogram(binwidth = 1,
+                  fill = "steelblue",
+                  color = "white") +
+  labs(
+    title = "Distribution of Final Math Grades",
+    x = "Final Math Grade (0-20)",
+    y = "Number of Students"
+  )
 ```
+
+Yes, the data appears to be normally distributed.
 
 **7.** Create a scatterplot regressing G3 on goout from the math dataset.
 Create another scatterplot regressing G3 on studytime from the math dataset.
-Create a summary table for both, and then explain why one model is better than
-the other model.
+Create a summary table for both, and then write a sentence or two about each
+model.
 
 ```{r}
-# Your solution for G3 ~ goout here
+math |>
+  ggplot(aes(x = goout, y = G3)) +
+  geom_point(alpha = .8) +
+  geom_smooth(method = "lm") +
+  xlab("Frequency of Going Out With Friends") +
+  ylab("Final Grade")
+
+math_lm <- lm(G3 ~ goout, 
+                 data = math)
+
+summary(math_lm)
 ```
 
 ```{r}
-# Your solution for G3 ~ studytime here
+math |>
+  ggplot(aes(x = studytime, y = G3)) +
+  geom_point(alpha = .8) +
+  geom_smooth(method = "lm") +
+  xlab("Time Spent Studying") +
+  ylab("Final Grade")
+
+math_lm2 <- lm(G3 ~ studytime, 
+                 data = math)
+
+summary(math_lm2)
 ```
+
+There is a weak, negative, linear relationship between going out with friends
+and math performance for students in this dataset.
+
+There is a weak, positive, linear relationship between time spent studying and
+math performance for students in this dataset.
 
 **8.** Create other diagnostic outputs for both models, and use them and the scatterplots you made in Q7 to assess whether the 4 diagnostic conditions are met.
 
 ```{r}
-# Your normality check for G3 ~ goout
+#normality check for G3 ~ goout
+resid_sd <- sd(math_lm$residuals)
+  
+math_lm |> 
+  broom::augment() |> 
+  ggplot(aes(x = .resid)) +
+  geom_histogram(aes(y = after_stat(density)), binwidth = 1) +
+  stat_function(fun = ~ dnorm(.x, mean = 0, sd = resid_sd),
+                color = "steelblue", lwd = 1.5) +
+  xlab("Residuals") +
+  theme(aspect.ratio = 1)
+
+#normality check for G3 ~ studytime
+resid_sd <- sd(math_lm2$residuals)
+  
+math_lm2 |> 
+  broom::augment() |> 
+  ggplot(aes(x = .resid)) +
+  geom_histogram(aes(y = after_stat(density)), binwidth = 1) +
+  stat_function(fun = ~ dnorm(.x, mean = 0, sd = resid_sd),
+                color = "steelblue", lwd = 1.5) +
+  xlab("Residuals") +
+  theme(aspect.ratio = 1)
 ```
 
 ```{r}
-# Your normality check for G3 ~ studytime
+#equal variance check for G3 ~ goout
+math_lm |> 
+  augment() |> 
+  ggplot(aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", 
+             color = "red", lwd = 1.5)
+
+#equal variance check for G3 ~ studytime
+math_lm2 |> 
+  augment() |> 
+  ggplot(aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", 
+             color = "red", lwd = 1.5)
 ```
 
-```{r}
-# Your equal variance check for G3 ~ goout
-```
-
-```{r}
-# Your equal variance check for G3 ~ studytime
-```
+From the scatterplots in Q7, we observe that both models meet the linearity condition. From the normality curves, we can see that both models have issues with normality since there are extreme outliers and very choppy histograms. Both models have equal variance based on the fitted vs residuals plot as can be seen by the dashed line being on 0.
 
 ## Model Validation
 
@@ -392,8 +524,29 @@ the following questions below your code:
    Q7? Compare the adjusted R-squared values.
    
 ```{r}
-# Your solution for Q9
+math_multi <- lm(G3 ~ studytime + failures + absences + Medu, data = math)
+summary(math_multi)
+
+tibble(
+  model     = c("Simple (studytime only)", "Multiple Regression"),
+  adj_r_squared = c(glance(math_lm2)$adj.r.squared, 
+                    glance(math_multi)$adj.r.squared)
+) |>
+  kable(col.names = c("Model", "Adjusted R-Squared"),
+        digits = 4) |> 
+  kableExtra::kable_styling(full_width = FALSE,
+                            bootstrap_options = "condensed")
 ```
+
+   - Which predictors are statistically significant at the 0.05 level?
+`failures` is the only predictor that is statistically significant at the 0.05 level (p < 0.001). `studytime` and `absences` are not significant, and `Medu` is only slightly significant at the 0.1 level.
+   
+   - Interpret the coefficient for `studytime` in context?
+The coefficient for `studytime` is 0.201, meaning that for each one-unit increase in study time category, a student's final math grade is predicted to increase by about 0.2 points, holding all other variables constant. However, this effect is not statistically significant. 
+
+   - Does this model explain more variance in `G3` than the simple models from 
+   Q7? Compare the adjusted R-squared values.
+Yes, the multiple regression model explains more variance as its adjusted R-squared is 0.149 compared to the 0.007 for the simple `G3 ~ studytime` model. This means that adding `failures`, `absences`, and `Medu` significantly improves the model's explanatory power.
 
 **10.** Before we can evaluate how well our model generalizes, we need to
 understand the ideaof a train/test split. Using the `math` dataset, perform the 
@@ -416,10 +569,39 @@ or neither?
 R-squared = 1 - SSE/SST.
 
 :::
-   
+
 ```{r}
-# Your solution for Q10
+r2_calc <- function(obs, pred) {
+  sse <- sum((obs - pred)^2, na.rm = TRUE)
+  sst <- sum((obs - mean(obs, na.rm = TRUE))^2, na.rm = TRUE)
+  1 - sse/sst
+}
+
+set.seed(331)
+n <- nrow(math)
+train_idx <- sample(1:n, size = floor(0.8 * n))
+
+train <- math[train_idx, ]
+test  <- math[-train_idx, ]
+
+fit <- lm(G3 ~ studytime + failures + absences + Medu, data = train)
+
+tibble(
+  split    = c("Training", "Testing"),
+  r_squared = c(r2_calc(obs = train$G3, pred = predict(fit, newdata = train)),
+                r2_calc(obs = test$G3,  pred = predict(fit, newdata = test)))
+) |>
+  kable(col.names = c("Split", "R-squared"),
+        digits = 4) |> 
+  kableExtra::kable_styling(full_width = FALSE,
+                            bootstrap_options = "condensed")
 ```
+
+The training R-squared is approximately 0.163 and the testing R-squared is 
+approximately 0.149. Since the testing R-squared is slightly lower than the 
+training R-squared, the model appears to be very slightly overfitting. 
+However, the difference is small enough that the model is essentially neither
+overfitting nor underfitting in any meaningful way.
 
 **11.** The problem with a single train/test split is that the result depends 
 heavily on which observations happened to end up in each set. K-fold cross 
@@ -437,6 +619,52 @@ the model?
 
 :::
 
+
 ```{r}
-# Your solution for Q11
+cv_r2 <- function(df, formula, k = 5) {
+  if (!is.data.frame(df)) stop("Input must be a data frame.")
+  
+  set.seed(331)
+  n <- nrow(df)
+  df <- df |>
+    mutate(fold = sample(rep_len(1:k, length.out = n), size = n))
+  
+  results <- rep(NA, k)
+  
+  for (i in 1:k) {
+    train <- df |> filter(fold != i)
+    test  <- df |> filter(fold == i)
+    
+    fit   <- lm(formula, data = train)
+    preds <- predict(fit, newdata = test)
+    
+    results[i] <- r2_calc(obs = test[[as.character(formula[[2]])]],
+                           pred = preds)
+  }
+  
+  results
+}
+
+fold_r2 <- cv_r2(math, G3 ~ studytime + failures + absences + Medu)
+
+tibble(
+  fold      = 1:5,
+  r_squared = fold_r2
+) |>
+  bind_rows(tibble(fold = NA, r_squared = mean(fold_r2))) |>
+  mutate(fold = as.character(fold),
+         fold = if_else(is.na(fold), "Mean", fold)) |>
+  kable(col.names = c("Fold", "R-Squared"),
+        digits = 4) |> 
+  kableExtra::kable_styling(full_width = FALSE,
+                            bootstrap_options = "condensed")
 ```
+
+The mean cross-validated R-squared is approximately 0.135, which is very close to
+both the training and testing R-squared values from Q10. This consistency across
+all 5 folds suggests that the model is stable and generalizes reasonably well
+to new data. The fact that the CV R-squared values vary somewhat across folds
+(some higher, some lower) illustrates exactly why a single train/test split
+can be misleading. This is because the result depends heavily on which 
+observations end up in which set. The k-fold approach gives a more reliable
+estimate of true model performance.
